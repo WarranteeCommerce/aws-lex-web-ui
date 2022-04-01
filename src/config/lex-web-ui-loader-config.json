@@ -1,4 +1,37 @@
 {
+  "cognito": {
+    "poolId": "ap-southeast-1:e12ac774-d82c-47d2-9a05-73e86a51ad05",
+    "region": "ap-southeast-1"
+  },
+  "lex": {
+    "botName": "WarranteeBot",
+    "v2BotId": "0NONH6HYVS",
+    "v2BotAliasId": "TSTALIASID"
+  },
+  "ui": {
+    "parentOrigin": "http://localhost:8000",
+    "toolbarTitle": "Any Cover",
+    "toolbarLogo": "",
+    "positiveFeedbackIntent": "Thumbs up",
+    "negativeFeedbackIntent": "Thumbs down",
+    "helpIntent": "Help",
+    "helpContent": {},
+    "enableLogin": false,
+    "enableSFX": false,
+    "forceLogin": false,
+    "AllowSuperDangerousHTMLInMessage": true,
+    "shouldDisplayResponseCardTitle": false,
+    "minButtonContent": "",
+    "hideInputFieldsForButtonResponse": false,
+    "pushInitialTextOnRestart": false,
+    "directFocusToBotInput": false,
+    "showDialogStateIcon": false,
+    "backButton": false,
+    "messageMenu": true,
+    "hideButtonMessageBubble": false,
+    "saveHistory": false,
+    "enableLiveChat": false
+  },
   "connect": {
     "contactFlowId": "",
     "instanceId": "",
@@ -12,3 +45,4 @@
     "attachChatTranscript": ""
   }
 }
+
