@@ -74,14 +74,17 @@
 .message-layout div {
   max-width: 100%;
 }
-.message-bot .message-bubble-row{
+.message-bot .message-bubble-row {
   background-image: url("./images/loading.gif");
   background-position: 10px 30px;
   background-repeat: no-repeat;
   background-size: 35px;
 }
-.message-bot + .message-bot .message-bubble-row{
+.message-bot + .message-bot .message-bubble-row {
   background: none;
+}
+.message-bot + .message-bot .card__actions {
+  display: none;
 }
 .message-bubble {
   border-radius: 15px !important;
@@ -98,17 +101,32 @@
   transform-origin: 100% 0;
 }
 @keyframes messageBubble {
-  0% { transform: scale(0); opacity: 0;}
-  100% {transform: scale(1); opacity: 1;}
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 .message-bot .message-bubble {
   background-color: #f4f4f4 !important;
   animation: messageBubbleBot 1.5s ease 1;
 }
 @keyframes messageBubbleBot {
-  0% { transform: scale(0); opacity: 0;}
-  70% { transform: scale(0); opacity: 0;}
-  100% {transform: scale(1); opacity: 1;}
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 .message-bot:before {
   content: "";
