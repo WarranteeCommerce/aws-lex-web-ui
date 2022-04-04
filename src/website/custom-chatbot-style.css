@@ -4,6 +4,14 @@
 :root {
   --bg-primary: "#fff";
 }
+::-webkit-scrollbar {
+  width: 20px;
+  background: white;
+}
+::-webkit-scrollbar-thumb {
+  background: #ffd960;
+  border: solid 7px white;
+}
 
 .application--wrap {
   max-height: 100vh;
@@ -74,30 +82,38 @@
 .message-layout div {
   max-width: 100%;
 }
-.message-bot .message-bubble-row {
+.message-bot {
   background-image: url("./images/loading.gif");
-  background-position: 10px 30px;
+  background-position: 65px 38px;
   background-repeat: no-repeat;
   background-size: 35px;
 }
-.message-bot + .message-bot .message-bubble-row {
-  background: none;
+.message-bot + .message-bot {
+  background-image: none;
 }
 .message-bot.hide-actions .response-card {
   display: none;
 }
+.message-layout {
+  transform-origin: 0 0;
+  animation: messageBubble 0.2s ease 1;
+}
+.message-bot .message-layout {
+  animation: messageBubbleBot 1.5s ease 1;
+}
+.message-bot + .message-bot .message-layout {
+  animation-duration: 2.2s;
+}
 .message-bubble {
   border-radius: 15px !important;
   padding: 0.7em 1em !important;
-  transform-origin: 0 0;
-  animation: messageBubble 0.2s ease 1;
   display: flex;
   align-items: center;
   box-shadow: none !important;
   min-height: 45px;
   min-width: 80px;
 }
-.message-human .message-bubble {
+.message-human .message-layout {
   transform-origin: 100% 0;
 }
 @keyframes messageBubble {
@@ -112,7 +128,6 @@
 }
 .message-bot .message-bubble {
   background-color: #f4f4f4 !important;
-  animation: messageBubbleBot 1.5s ease 1;
 }
 @keyframes messageBubbleBot {
   0% {
@@ -212,11 +227,9 @@
 .card__title.card__title--primary {
   background-color: #eeedeb !important;
 }
-
-.input-group--text-field input,
-.input-group--text-field textarea,
 .input-group--text-field label {
-  font-size: 14px !important;
+  font-size: 1em;
+  color: rgba(0, 0, 0, 0.3);
 }
 
 .card__actions .btn {
@@ -270,6 +283,38 @@ button.min-button {
 }
 .input-container > .toolbar input {
   font-size: inherit !important;
+}
+
+#startActions{
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+  background-color: #ffffff;
+  display: flex;
+  z-index: 100;
+  width: 100%;
+  justify-content: center;
+  padding: 3rem 1rem;
+  transition: all 0.5s ease;
+}
+#startActions.hide {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+#startActions > button {
+  padding: 12px 12px;
+  background: none;
+  font-size: 1.3em;
+  border-radius: 10px;
+  border: 2px solid #f7bc00;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+#startActions > button:hover{
+  background-color: #ffd960;
+}
+#startActions > button:first-child{
+  margin-right: 20px;
 }
 
 @media only screen and (min-width: 560px) {
