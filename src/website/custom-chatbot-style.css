@@ -83,8 +83,11 @@
 .message-bot + .message-bot .message-bubble-row {
   background: none;
 }
-.message-bot + .message-bot .card__actions {
+.message-bot .card__actions {
   display: none;
+}
+.message-bot + .message-bot .card__actions {
+  display: block;
 }
 .message-bubble {
   border-radius: 15px !important;
