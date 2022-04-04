@@ -4,6 +4,7 @@
     "region": "ap-southeast-1"
   },
   "lex": {
+    "initialText": "",
     "botName": "AnyCover",
     "v2BotId": "JDKCHTSYNR",
     "v2BotAliasId": "TSTALIASID"
