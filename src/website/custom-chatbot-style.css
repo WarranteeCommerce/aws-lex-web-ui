@@ -9,7 +9,7 @@
   background: white;
 }
 ::-webkit-scrollbar-thumb {
-  background: #ffd960;
+  background: #FBCF63;
   border: solid 7px white;
 }
 
@@ -161,7 +161,7 @@
   pointer-events: none;
 }
 .message-human .message-bubble {
-  background-color: #ffd960 !important;
+  background-color: #FBCF63 !important;
 }
 .message-feedback .message-bubble {
   background-color: #ffffff !important;
@@ -250,7 +250,7 @@
   font-size: 1em !important;
   min-width: 44px !important;
   background-color: transparent !important;
-  border: solid 1px #f8bf0c !important;
+  border: solid 1px #FBCF63 !important;
   box-shadow: none !important;
   border-radius: 15px;
   text-transform: initial;
@@ -322,11 +322,11 @@ button.min-button {
   pointer-events: none;
 }
 #startActions > button {
-  padding: 12px 12px;
-  background: none;
-  font-size: 1.3em;
+  padding: 0.75em 1em;
+  background: #FBCF63;
+  font-size: calc(1em + .25vmin);
   border-radius: 10px;
-  border: 2px solid #f7bc00;
+  /* border: 2px solid #f7bc00; */
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 #startActions > button:hover{
