@@ -215,6 +215,9 @@
 .card {
   width: auto !important;
 }
+.response-card {
+  margin: 1rem 0 0 0 !important;
+}
 .card__title {
   padding: 10px 16px !important;
 }
@@ -231,15 +234,31 @@
   font-size: 1em;
   color: rgba(0, 0, 0, 0.3);
 }
-
+.input-group--text-field.primary--text {
+  color: #f8bf0c !important;
+}
+.card__actions{
+  margin: -10px !important;
+  padding: 0;
+  display: flex !important;
+  max-width: initial !important;
+  flex-wrap: wrap;
+}
 .card__actions .btn {
-  margin: 4px 4px !important;
+  flex-grow: 1;
+  margin: 10px !important;
   font-size: 1em !important;
   min-width: 44px !important;
   background-color: transparent !important;
   border: solid 1px #f8bf0c !important;
   box-shadow: none !important;
   border-radius: 15px;
+  text-transform: initial;
+  height: auto;
+  padding: 1rem 0.5rem;
+}
+.theme--light .btn--disabled {
+  border-color: silver !important;
 }
 
 button.min-button {
