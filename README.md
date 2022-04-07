@@ -1,6 +1,7 @@
-# Sample Amazon Lex Web Interface
+### Sample Amazon Lex Web Interface
 
-> sample Amazon Lex Web Interface
+## Purpose 
+This repository contains the code for the UI of chatbot of the main website : https://customers.anycover.co/ 
 
 # Overview
 This is a sample [Amazon Lex](https://aws.amazon.com/lex/)
@@ -18,6 +19,35 @@ and ability to interrupt responses and replay recordings
 - Ability to programmatically configure and interact with the chatbot
 UI using JavaScript
 
+## Local Set-up 
+This project provides a simple HTTP server to serve the sample site.
+You can run the server using [Node.js](https://nodejs.org) on your local
+machine or a test server.
+
+Before you run the local development server, you need to install the
+development dependencies with the command:
+```shell
+npm install
+```
+To start the HTTP server web on port `8000`, issue the command:
+```shell
+# serves http://localhost:8000/index.html
+# and http://localhost:8000/parent.html
+npm start
+```
+
+If you want to hack the libraries under the `src/lex-web-ui-loader`
+directory, the project provides a hot reloadable [webpack dev
+server](https://github.com/webpack/webpack-dev-server) setup with the
+following command:
+```shell
+# runs on port 8000
+npm run dev
+```
+
+For a more advanced local host development and test environment, see the
+[Dependencies and Build Setup](lex-web-ui#dependencies-and-build-setup)
+documentation of the chatbot UI component.
 #### Supported AWS Regions
   - us-east-1:  https://aws-bigdata-blog.s3.amazonaws.com/artifacts/aws-lex-web-ui/artifacts/templates/master.yaml
   - us-west-2:  https://aws-bigdata-blog-replica-us-west-2.s3-us-west-2.amazonaws.com/artifacts/aws-lex-web-ui/artifacts/templates/master.yaml
@@ -601,56 +631,6 @@ deployment method in this project. It uses the
 `lex-web-ui-loader.js` loader library to display and configure the chatbot
 UI. You can run a development version of this sample site on your machine.
 
-#### Running Locally
-This project provides a simple HTTP server to serve the sample site.
-You can run the server using [Node.js](https://nodejs.org) on your local
-machine or a test server.
-
-The chatbot UI requires proper configuration values in the files located
-under the [src/config](src/config) directory. Modify the values in the
-`lex-web-ui-loader-config.json` file under the `src/config` directory.
-If you deployed the demo site using the CloudFormation templates provided
-by this project, you can copy the automatically generated config files
-from the S3 buckets to your development host.
-
-As a minimum,you would need to pass an existing Cognito Pool Id
-and Lex Bot name. For example, set the appropriate values in the
-`src/config/lex-web-ui-loader-config.json` file:
-```JSON
-  ...
-  cognito: {
-    "poolId": "us-east-1:deadbeef-fade-babe-cafe-0123456789ab"
-  },
-  lex: {
-    "botName": "myHelpBot"
-  }
-  ...
-```
-
-Before you run the local development server, you need to install the
-development dependencies with the command:
-```shell
-npm install
-```
-To start the HTTP server web on port `8000`, issue the command:
-```shell
-# serves http://localhost:8000/index.html
-# and http://localhost:8000/parent.html
-npm start
-```
-
-If you want to hack the libraries under the `src/lex-web-ui-loader`
-directory, the project provides a hot reloadable [webpack dev
-server](https://github.com/webpack/webpack-dev-server) setup with the
-following command:
-```shell
-# runs on port 8000
-npm run dev
-```
-
-For a more advanced local host development and test environment, see the
-[Dependencies and Build Setup](lex-web-ui#dependencies-and-build-setup)
-documentation of the chatbot UI component.
 
 # Deploying
 This project provides [AWS CloudFormation](https://aws.amazon.com/cloudformation/)
