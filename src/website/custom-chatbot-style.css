@@ -94,7 +94,8 @@
 .message-layout div {
   max-width: 100%;
 }
-.message-bot {
+.message-bot,
+.messsge-loading, .message-loading {
   background-image: url("./images/loading.gif");
   background-position: 65px 38px;
   background-repeat: no-repeat;
@@ -102,7 +103,10 @@
   display: none;
 }
 .messsge-loading, .message-loading {
-  display: none !important;
+  /* display: none !important; */
+}
+.messsge-loading > div {
+  opacity: 0;
 }
 .message-bot.show {
   display: flex;
