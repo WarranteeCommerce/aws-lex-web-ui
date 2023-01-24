@@ -43,6 +43,7 @@
       // The ChatBotUiLoader variable contains the FullPageLoader field which is a
       // constructor for the loader.
       var Loader = ChatBotUiLoader.FullPageLoader;
+      var onLexUiLoad = new Event('onLexUiLoad');
 
       // The loader constructor supports various configurable options used to
       // control how the component configuration and dependencies are retrieved.
@@ -83,7 +84,7 @@
       //   3. Instantiates the chatbot UI component in the DOM
       loader
         .load(chatbotUiConfig)
-        .then(function () { console.log('ChatBotUiLoader loaded'); })
+        .then(function () { console.log('ChatBotUiLoader loaded'); window.dispatchEvent(onLexUiLoad) })
         .catch(function (error) { console.error(error); });
     </script>
     <script src="./ui-assist.js"></script>
