@@ -45,6 +45,7 @@ function insertStartBtns(){
 
 function handleIncomingMsg(msg){
     let isBot = msg.classList.contains('message-bot');
+    let isBotLoading = msg.classList.contains('messsge-loading');
     let isPreviousBot = msg.previousElementSibling?.classList.contains('message-bot')
     if(isBot){
         !window.botMsgStack && (window.botMsgStack = []);
@@ -57,6 +58,14 @@ function handleIncomingMsg(msg){
             window.botMsgStack.shift();    
         },time||0)
         window.botMsgStack.push(msg)
+        if(!isBotLoading) {
+            const newBotMessage = new CustomEvent("newBotMessage", {
+              detail: {
+                message: msg,
+              },
+            });
+            window.dispatchEvent(newBotMessage);
+        }
     }
     if(isBot && isPreviousBot){
         msg.previousElementSibling.classList.add('hide-actions');
@@ -75,6 +84,9 @@ function handleIncomingMsg(msg){
 
 // initial script calls
 // --------------------
+
+// creating custom newBotMessage listerner
+// const newBotMessage = new Event('newBotMessage');
 
 // initializing resize event listerner for mobiles to manage keypad opening and closing.
 window.isMobile = mobileCheck();
@@ -115,3 +127,35 @@ let observer = new MutationObserver(function(mutationsList,observer){
     }
 });
 observer.observe(document.body,{childList:true, subtree:true})
+
+// automatic claim start if contractId present in query params
+const urlParams = new URLSearchParams(window.location.search);
+const contractId = urlParams.get('contractId');
+if(contractId) {
+    let startClaim = false;
+    function handleAutoClaim(e) {
+        if(!startClaim){
+            // starting a claim
+            startClaim = true;
+            window.removeEventListener('onLexUiLoad', handleAutoClaim);
+            setTimeout(()=>{
+                const newClaimBtn = document.querySelector('#newClaimBtn');
+                if(newClaimBtn) {
+                    newClaimBtn.click();
+                }
+            }, 500)
+            return;
+        }
+        
+        const botMessage = e.detail.message.textContent || "";
+        if(botMessage.endsWith("What Anycover Contract ID should I search for?")) {
+           window.removeEventListener('newBotMessage', handleAutoClaim); 
+           setTimeout(()=>{
+                window.loader.compLoader.api.postText(contractId);
+           }, 2500);
+        }
+    }
+
+    window.addEventListener('onLexUiLoad', handleAutoClaim);
+    window.addEventListener('newBotMessage', handleAutoClaim);
+}
