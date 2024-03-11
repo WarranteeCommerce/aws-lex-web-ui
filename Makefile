@@ -50,6 +50,7 @@ load-current-config:
 BUILD_TYPE ?= $()
 
 # updates the config files with values from the environment
+CREATE_CUSTOM_CSS := $(BUILD_DIR)/create-custom-css.js
 UPDATE_CONFIG_SCRIPT := $(BUILD_DIR)/update-lex-web-ui-config.js
 export CURRENT_CONFIG_FILE ?= $(realpath $(CURRENT_CONFIG_FILE))
 export WEBAPP_CONFIG_PROD ?= $(realpath $(WEBAPP_DIR)/src/config/config.prod.json)
@@ -62,6 +63,8 @@ CONFIG_FILES := \
 config: $(UPDATE_CONFIG_SCRIPT) $(CONFIG_ENV) $(CONFIG_FILES)
 	@echo "[INFO] Running config script: [$(<)]"
 	node $(<)
+	@echo "[INFO] Running custom css creation script: [$(<)]"
+	node $(CREATE_CUSTOM_CSS) $(USER_CUSTOM_CSS_COPY)
 .PHONY: config
 
 build: config
@@ -148,6 +151,9 @@ sync-website: create-iframe-snippet
 		--exclude '*' \
 		--metadata-directive REPLACE --cache-control max-age=0 \
 		--include 'lex-web-ui-loader-config.json' \
+		--include 'initial_speech*.*' \
+		--include 'all_done*.*' \
+		--include 'there_was_an_error*.*' \
 		"$(CONFIG_DIR)" s3://$(WEBAPP_BUCKET)
 	@echo "[INFO] all done deploying"
 .PHONY: sync-website

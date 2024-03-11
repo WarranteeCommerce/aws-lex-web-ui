@@ -4,17 +4,22 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const eslintFormatterFriendly = require('eslint-formatter-friendly');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const fs = require('fs');
 
+function getAssetPath(filePath, defaultPath) {
+  const fileExists = fs.existsSync(filePath);
+  return fileExists ? filePath : defaultPath;
+}
 
 const VERSION = require('./package.json').version;
 
 const basePath = __dirname;
 const distDir = path.join(basePath, 'dist');
+const assetsDir = path.resolve(__dirname, 'lex-web-ui/dist/bundle');
 const devServerPort = (process.env.PORT) ? Number(process.env.PORT) : 8000;
 
 module.exports = (env) => {
-  const buildEnv = env || 'development';
-  const isProd = (buildEnv === 'production');
+  const isProd =  (env.production === true);
 
   return {
     mode: (isProd) ? 'production' : 'development',
@@ -28,6 +33,15 @@ module.exports = (env) => {
       library: 'ChatBotUiLoader',
       libraryExport: 'ChatBotUiLoader',
       libraryTarget: 'umd',
+    },
+    resolve: {
+        fallback: {
+            util: require.resolve('util/'),
+            crypto: require.resolve('crypto-browserify'),
+            buffer: require.resolve('buffer/'),
+            stream: require.resolve('stream-browserify'),
+            'process/browser': require.resolve('process/browser'),
+        },
     },
     module: {
       rules: [
@@ -46,6 +60,9 @@ module.exports = (env) => {
           test: /\.js$/,
           exclude: /[\\/]node_modules[\\/]/,
           loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
         },
         {
           test: /\.css$/,
@@ -58,9 +75,6 @@ module.exports = (env) => {
           ] : [
             {
               loader: MiniCssExtractPlugin.loader,
-              options: {
-                hmr: true,
-              },
             },
             'css-loader',
           ],
@@ -68,33 +82,58 @@ module.exports = (env) => {
       ],
     },
     devtool: (isProd) ? 'source-map' : 'cheap-module-source-map',
+    performance: {
+      hints: false,
+    },
     devServer: {
-      contentBase: [
-        path.join(__dirname, 'src/config'),
-        path.join(__dirname, 'src/website'),
-        distDir,
+      static: [
+        {
+          directory: path.join(__dirname, 'src/config'),
+        },
+        {
+          directory: path.join(__dirname, 'src/website'),
+        },
+        {
+          directory: distDir,
+        },
       ],
-      clientLogLevel: 'warning',
+      client: {
+        logging: 'warn',
+        overlay: {
+          errors: true,
+          warnings: false,
+          runtimeErrors: true,
+
+        },
+      },
       hot: true,
       port: devServerPort,
-      overlay: { warnings: false, errors: true },
-      stats: 'errors-only',
     },
     stats: {
       modules: false,
+      logging: 'error',
+    },
+    optimization: {
+      minimize: false,
     },
     plugins: [
+      new webpack.ProvidePlugin({
+        process: "process/browser",
+        Buffer: ["buffer", "Buffer"],
+      }),
       new HtmlWebpackPlugin({
         filename: 'index.html',
         template: path.join(basePath, 'src/website/index.html'),
         // script is included in template
         inject: false,
+        scriptLoading: 'blocking',
       }),
       new HtmlWebpackPlugin({
         filename: 'parent.html',
         template: path.join(basePath, 'src/website/parent.html'),
         // script is included in template
         inject: false,
+        scriptLoading: 'blocking',
       }),
       isProd && new webpack.BannerPlugin({
         banner: `/*!
@@ -109,29 +148,38 @@ module.exports = (env) => {
       new MiniCssExtractPlugin({
         filename: (isProd) ? '[name].min.css' : '[name].css',
       }),
-      new CopyPlugin([
-        // copy parent page
+      new CopyPlugin(
         {
-          from: path.join(basePath, 'src/website/parent.html'),
-          to: distDir,
-        },
-        // copy custom css
-        {
-          from: path.join(basePath, 'src/website/custom-chatbot-style.css'),
-          to: distDir,
-        },
-        // copy lex-web-ui library
-        {
-          from: path.join(basePath, 'lex-web-ui/dist/bundle/lex-web-ui.*'),
-          to: distDir,
-          flatten: true,
-        },
-        {
-          from: path.join(basePath, 'lex-web-ui/dist/bundle/wav-worker.*'),
-          to: distDir,
-          flatten: true,
-        },
-      ]),
+          patterns: [
+            // copy parent page
+            //{
+            //  from: path.join(basePath, 'src/website/parent.html'),
+            //  to: distDir,
+            //},
+            // copy custom css
+            {
+              from: path.join(basePath, 'src/website/custom-chatbot-style.css'),
+              to: distDir,
+            },
+            // copy lex-web-ui library
+            {
+              from: getAssetPath(path.join(basePath, 'lex-web-ui/dist/bundle/**/*'), assetsDir),
+              to: path.resolve(distDir, '[path][name][ext]'),
+              globOptions: {
+                ignore: [
+                  "**/*.html",
+                  "**.*.txt",
+                ],
+              },
+            },
+          ]
+        }
+      ),
     ].filter(Boolean),
+    performance: {
+      hints: false,
+      maxEntrypointSize: 512000,
+      maxAssetSize: 512000
+  },
   };
 };

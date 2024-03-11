@@ -3,44 +3,47 @@
     v-bind:ui-minimized="isUiMinimized"
   >
     <min-button
-      v-bind:toolbar-color="toolbarColor"
-      v-bind:is-ui-minimized="isUiMinimized"
-      v-on:toggleMinimizeUi="toggleMinimizeUi"
-    ></min-button>
+      :toolbar-color="toolbarColor"
+      :is-ui-minimized="isUiMinimized"
+      @toggleMinimizeUi="toggleMinimizeUi"
+    />
     <toolbar-container
       v-if="!isUiMinimized"
-      v-bind:userName="userNameValue"
-      v-bind:toolbar-title="toolbarTitle"
-      v-bind:toolbar-color="toolbarColor"
-      v-bind:toolbar-logo="toolbarLogo"
-      v-bind:is-ui-minimized="isUiMinimized"
-      v-on:toggleMinimizeUi="toggleMinimizeUi"
+      :userName="userNameValue"
+      :toolbar-title="toolbarTitle"
+      :toolbar-color="toolbarColor"
+      :toolbar-logo="toolbarLogo"
+      :toolbarStartLiveChatLabel="toolbarStartLiveChatLabel"
+      :toolbarStartLiveChatIcon="toolbarStartLiveChatIcon"
+      :toolbarEndLiveChatLabel="toolbarEndLiveChatLabel"
+      :toolbarEndLiveChatIcon="toolbarEndLiveChatIcon"
+      :is-ui-minimized="isUiMinimized"
+      @toggleMinimizeUi="toggleMinimizeUi"
       @requestLogin="handleRequestLogin"
       @requestLogout="handleRequestLogout"
       @requestLiveChat="handleRequestLiveChat"
       @endLiveChat="handleEndLiveChat"
       transition="fade-transition"
-    ></toolbar-container>
+    />
 
-    <v-content
+    <v-main
       v-if="!isUiMinimized"
     >
       <v-container
         class="message-list-container"
-        v-bind:class="`toolbar-height-${toolbarHeightClassSuffix}`"
+        :class="`toolbar-height-${toolbarHeightClassSuffix}`"
         fluid pa-0
       >
         <message-list v-if="!isUiMinimized"
         ></message-list>
       </v-container>
-    </v-content>
+    </v-main>
 
     <input-container
       ref="InputContainer"
       v-if="!isUiMinimized && !hasButtons"
-      v-bind:text-input-placeholder="textInputPlaceholder"
-      v-bind:initial-speech-instruction="initialSpeechInstruction"
-      @endLiveChatClicked="handleEndLiveChat"
+      :text-input-placeholder="textInputPlaceholder"
+      :initial-speech-instruction="initialSpeechInstruction"
     ></input-container>
     <div
       v-if="isSFXOn"
@@ -106,6 +109,18 @@ export default {
     toolbarLogo() {
       return this.$store.state.config.ui.toolbarLogo;
     },
+    toolbarStartLiveChatLabel() {
+      return this.$store.state.config.ui.toolbarStartLiveChatLabel;
+    },
+    toolbarStartLiveChatIcon() {
+      return this.$store.state.config.ui.toolbarStartLiveChatIcon;
+    },
+    toolbarEndLiveChatLabel() {
+      return this.$store.state.config.ui.toolbarEndLiveChatLabel;
+    },
+    toolbarEndLiveChatIcon() {
+      return this.$store.state.config.ui.toolbarEndLiveChatIcon;
+    },
     isSFXOn() {
       return this.$store.state.isSFXOn;
     },
@@ -120,7 +135,7 @@ export default {
     },
     isMobile() {
       const mobileResolution = 900;
-      return (this.$vuetify.breakpoint.smAndDown &&
+      return (//this.$vuetify.breakpoint.smAndDown &&
         'navigator' in window && navigator.maxTouchPoints > 0 &&
         'screen' in window &&
         (window.screen.height < mobileResolution ||
@@ -248,13 +263,16 @@ export default {
         );
         // after slight delay, send in initial utterance if it is defined.
         // waiting for credentials to settle down a bit.
-        setTimeout(() => this.$store.dispatch('sendInitialUtterance'), 500);
+        if (!this.$store.state.config.iframe.shouldLoadIframeMinimized) {
+          setTimeout(() => this.$store.dispatch('sendInitialUtterance'), 500);
+          this.$store.commit('setInitialUtteranceSent', true);
+        }
       })
       .catch((error) => {
         console.error('could not initialize application while mounting:', error);
       });
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (typeof window !== 'undefined') {
       window.removeEventListener('resize', this.onResize, { passive: true });
     }
@@ -346,7 +364,16 @@ export default {
     },
     handleEndLiveChat() {
       console.info('LexWeb: handleEndLiveChat');
-      this.$store.dispatch('requestLiveChatEnd');
+      try {
+        this.$store.dispatch('requestLiveChatEnd');
+      } catch (error) {
+        console.error(`error requesting disconnect ${error}`);
+        this.$store.dispatch('pushLiveChatMessage', {
+          type: 'agent',
+          text: this.$store.state.config.connect.chatEndedMessage,
+        });
+        this.$store.dispatch('liveChatSessionEnded');
+      }
     },
     // messages from parent
     messageHandler(evt) {
@@ -538,6 +565,7 @@ NOTE: not using var() for different heights due to IE11 compatibility
 */
 .message-list-container {
   position: fixed;
+  background-color: #fefefe;
 }
 .message-list-container.toolbar-height-sm {
   top: 56px;
@@ -558,4 +586,7 @@ NOTE: not using var() for different heights due to IE11 compatibility
   the button is shown */
   background: transparent;
 }
+
+html { font-size: 14px !important; } 
+
 </style>

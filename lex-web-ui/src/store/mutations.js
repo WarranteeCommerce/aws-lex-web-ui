@@ -239,6 +239,13 @@ export default {
     state.lex.isProcessing = bool;
   },
   /**
+   * remove appContext from Lex session attributes
+   */
+  removeAppContext(state) {
+    const session = state.lex.sessionAttributes;
+    delete session.appContext;
+  },
+  /**
   * set to true if lex is being interrupted while speaking
   */
   setIsLexInterrupting(state, bool) {
@@ -337,6 +344,9 @@ export default {
     state.isUiMinimized = !state.isUiMinimized;
   },
 
+  setInitialUtteranceSent(state) {
+    state.initialUtteranceSent = true;
+  },
   toggleIsSFXOn(state) {
     state.isSFXOn = !state.isSFXOn;
   },
@@ -524,6 +534,43 @@ export default {
     state.lex.isPostTextRetry = bool;
   },
   updateLocaleIds(state, data) {
-    state.config.lex.v2BotLocaleId = data;
+    state.config.lex.v2BotLocaleId = data.trim().replace(/ /g, '');
   },
+
+  /**
+   * use to set the voice output
+   */ 
+  toggleIsVoiceOutput(state, bool) {
+    state.botAudio.isVoiceOutput = bool;
+  },
+
+//Push WS Message to streamingMessage[]
+pushWebSocketMessage(state, wsMessages){
+  state.streaming.wsMessages.push(wsMessages);
+},
+
+//Append wsMessage to wsMessageString in MessageLoading.vue
+typingWsMessages(state){
+  if(state.streaming.isStartingTypingWsMessages){
+    state.streaming.wsMessagesString = state.streaming.wsMessagesString.concat(state.streaming.wsMessages[state.streaming.wsMessagesCurrentIndex]);
+    state.streaming.wsMessagesCurrentIndex++;
+
+  }else if (state.streaming.isStartingTypingWsMessages){
+    state.streaming.isStartingTypingWsMessages = false;
+    //reset wsMessage to default
+    state.streaming.wsMessagesString = '';
+    state.streaming.wsMessages=[];
+    state.streaming.wsMessagesCurrentIndex=0;
+  }
+},
+
+setIsStartingTypingWsMessages(state, bool){
+  state.streaming.isStartingTypingWsMessages = bool;
+  if(!bool){
+    //reset wsMessage to default
+    state.streaming.wsMessagesString = '';
+    state.streaming.wsMessages=[];
+    state.streaming.wsMessagesCurrentIndex=0;
+  }
+}, 
 };

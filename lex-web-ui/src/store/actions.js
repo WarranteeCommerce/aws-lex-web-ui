@@ -38,6 +38,10 @@ let lexClient;
 let audio;
 let recorder;
 let liveChatSession;
+let wsClient;
+let pollyInitialSpeechBlob = {};
+let pollyAllDoneBlob = {};
+let pollyThereWasAnErrorBlob = {};
 
 export default {
   /***********************************************************************
@@ -115,8 +119,15 @@ export default {
       'setLexSessionAttributes',
       context.state.config.lex.sessionAttributes,
     );
+    // Initiate WebSocket after lexClient get credential, due to sessionId was assigned from identityId
     return context.dispatch('getCredentials')
-      .then(() => lexClient.initCredentials(awsCredentials));
+      .then(() => {
+        lexClient.initCredentials(awsCredentials)
+        //Enable streaming response
+        if (String(context.state.config.lex.allowStreamingResponses) === "true") {
+          context.dispatch('InitWebSocketConnect')
+        }
+      });
   },
   initPollyClient(context, client) {
     if (!context.state.recState.isRecorderEnabled) {
@@ -198,7 +209,7 @@ export default {
     // This audio should be explicitly played as a response to a click
     // in the UI
     audio.src = silentSound;
-    // autoplay will be set as a response to a clik
+    // autoplay will be set as a response to a click
     audio.autoplay = false;
 
     return Promise.resolve();
@@ -370,6 +381,7 @@ export default {
    **********************************************************************/
 
   startConversation(context) {
+    audio.pause();
     context.commit('setIsConversationGoing', true);
     return context.dispatch('startRecording');
   },
@@ -425,6 +437,46 @@ export default {
     return context.dispatch('pollyGetBlob', text, format)
       .then(blob => context.dispatch('getAudioUrl', blob))
       .then(audioUrl => context.dispatch('playAudio', audioUrl));
+  },
+  pollySynthesizeInitialSpeech(context) {
+    const localeId = localStorage.getItem('selectedLocale') ? localStorage.getItem('selectedLocale') : context.state.config.lex.v2BotLocaleId.split(',')[0].trim();
+    if (localeId in pollyInitialSpeechBlob) {
+      return Promise.resolve(pollyInitialSpeechBlob[localeId]);
+    } else {
+      return fetch(`./initial_speech_${localeId}.mp3`)
+        .then(data => data.blob())
+        .then((blob) => {
+          pollyInitialSpeechBlob[localeId] = blob;
+          return context.dispatch('getAudioUrl', blob)
+        })
+        .then(audioUrl => context.dispatch('playAudio', audioUrl));
+    }
+  },
+  pollySynthesizeAllDone: function (context) {
+    const localeId = localStorage.getItem('selectedLocale') ? localStorage.getItem('selectedLocale') : context.state.config.lex.v2BotLocaleId.split(',')[0].trim();
+    if (localeId in pollyAllDoneBlob) {
+      return Promise.resolve(pollyAllDoneBlob[localeId]);
+    } else {
+      return fetch(`./all_done_${localeId}.mp3`)
+        .then(data => data.blob())
+        .then(blob => {
+          pollyAllDoneBlob[localeId] = blob;
+          return Promise.resolve(blob)
+        })
+    }
+  },
+  pollySynthesizeThereWasAnError(context) {
+    const localeId = localStorage.getItem('selectedLocale') ? localStorage.getItem('selectedLocale') : context.state.config.lex.v2BotLocaleId.split(',')[0].trim();
+    if (localeId in pollyThereWasAnErrorBlob) {
+      return Promise.resolve(pollyThereWasAnErrorBlob[localeId]);
+    } else {
+      return fetch(`./there_was_an_error_${localeId}.mp3`)
+        .then(data => data.blob())
+        .then(blob => {
+          pollyThereWasAnErrorBlob[localeId] = blob;
+          return Promise.resolve(blob)
+        })
+    }
   },
   interruptSpeechConversation(context) {
     if (!context.state.recState.isConversationGoing &&
@@ -581,7 +633,7 @@ export default {
         if (context.state.lex.dialogState === 'Fulfilled') {
           context.dispatch('reInitBot');
         }
-        if (context.state.isPostTextRetry) {
+        if (context.state.lex.isPostTextRetry) {
           context.commit('setPostTextRetry', false);
         }
       })
@@ -642,19 +694,41 @@ export default {
     context.commit('setIsLexProcessing', true);
     context.commit('reapplyTokensToSessionAttributes');
     const session = context.state.lex.sessionAttributes;
-    delete session.appContext;
+    context.commit('removeAppContext');
     const localeId = context.state.config.lex.v2BotLocaleId
       ? context.state.config.lex.v2BotLocaleId.split(',')[0]
       : undefined;
+    const sessionId = lexClient.userId;
     return context.dispatch('refreshAuthTokens')
       .then(() => context.dispatch('getCredentials'))
-      .then(() => lexClient.postText(text, localeId, session))
+      .then(() => {
+        // TODO: Need to handle if the error occurred. typing would be broke since lexClient.postText throw error
+        if (String(context.state.config.lex.allowStreamingResponses) === "true") {
+          context.commit('setIsStartingTypingWsMessages', true);
+
+          wsClient.onmessage = (event) => {
+            if(event.data!=='/stop/' && context.getters.isStartingTypingWsMessages()){
+              console.info("streaming ", context.getters.isStartingTypingWsMessages());
+              context.commit('pushWebSocketMessage',event.data);
+              context.dispatch('typingWsMessages')
+            }else{
+              console.info('stopping streaming');
+            }
+          }
+        }
+        // Return Lex response
+        return lexClient.postText(text, localeId, session);
+      })
       .then((data) => {
+        //TODO: Waiting for all wsMessages typing on the chat bubbles
+        context.commit('setIsStartingTypingWsMessages', false);
         context.commit('setIsLexProcessing', false);
         return context.dispatch('updateLexState', data)
           .then(() => Promise.resolve(data));
       })
       .catch((error) => {
+        //TODO: Need to handle if the error occurred
+        context.commit('setIsStartingTypingWsMessages', false);
         context.commit('setIsLexProcessing', false);
         throw error;
       });
@@ -706,13 +780,14 @@ export default {
     return Promise.resolve()
       .then(() => {
         if (!audioStream || !audioStream.length) {
-          const text = (dialogState === 'ReadyForFulfillment') ?
-            'All done' :
-            'There was an error';
-          return context.dispatch('pollyGetBlob', text);
+          if (dialogState === 'ReadyForFulfillment') {
+            return context.dispatch('pollySynthesizeAllDone');
+          } else {
+            return context.dispatch('pollySynthesizeThereWasAnError');
+          }
+        } else {
+          return Promise.resolve(new Blob([audioStream], {type: contentType}));
         }
-
-        return Promise.resolve(new Blob([audioStream], { type: contentType }));
       });
   },
   updateLexState(context, lexState) {
@@ -745,9 +820,12 @@ export default {
     }
     context.commit('updateLexState', { ...lexStateDefault, ...lexState });
     if (context.state.isRunningEmbedded) {
+      // Vue3 uses a Proxy object, this removes the proxy and gives back the raw object
+      // This works around an error when sending it back to the parent window
+      let rawState = JSON.parse(JSON.stringify(context.state.lex))
       context.dispatch(
         'sendMessageToParentWindow',
-        { event: 'updateLexState', state: context.state.lex },
+        { event: 'updateLexState', state: rawState },
       );
     }
     return Promise.resolve();
@@ -819,7 +897,7 @@ export default {
     }).reduce(function(newData, k) {
         newData[k] = context.state.lex.sessionAttributes[k];
         return newData;
-    }, {}); 
+    }, {});
 
     const initiateChatRequest = {
       Attributes: attributesToSend,
@@ -928,6 +1006,11 @@ export default {
     context.commit('clearLiveChatIntervalId');
     if (context.state.chatMode === chatMode.LIVECHAT && liveChatSession) {
       requestLiveChatEnd(liveChatSession);
+      context.dispatch('pushLiveChatMessage', {
+        type: 'agent',
+        text: context.state.config.connect.chatEndedMessage,
+      });
+      context.dispatch('liveChatSessionEnded');
       context.commit('setLiveChatStatus', liveChatStatus.ENDED);
     }
   },
@@ -1056,6 +1139,10 @@ export default {
    **********************************************************************/
 
   toggleIsUiMinimized(context) {
+    if (!context.state.initialUtteranceSent && context.state.isUiMinimized) {
+      setTimeout(() => context.dispatch('sendInitialUtterance'), 500);
+      context.commit('setInitialUtteranceSent', true);
+    }
     context.commit('toggleIsUiMinimized');
     return context.dispatch(
       'sendMessageToParentWindow',
@@ -1142,5 +1229,70 @@ export default {
   },
   changeLocaleIds(context, data) {
     context.commit('updateLocaleIds', data);
+  },
+
+/***********************************************************************
+ *
+ * WebSocket Actions
+ *
+ **********************************************************************/
+  InitWebSocketConnect(context){
+    const sessionId = lexClient.userId;
+    wsClient = new WebSocket(context.state.config.lex.streamingWebSocketEndpoint+'?sessionId='+sessionId);
+  },
+  typingWsMessages(context){
+    if (context.getters.wsMessagesCurrentIndex()<context.getters.wsMessagesLength()-1){
+      setTimeout(() => {
+        context.commit('typingWsMessages');
+      }, 500);
+    }
+  },
+
+/***********************************************************************
+ *
+ * File Upload Actions
+ *
+ **********************************************************************/
+  uploadFile(context, file) {
+    const s3 = new AWS.S3({
+      credentials: awsCredentials
+    });
+    //Create a key that is unique to the user & time of upload
+    const documentKey = lexClient.userId + '/' + file.name.split('.').join('-' + Date.now() + '.')
+    const s3Params = {
+      Body: file,
+      Bucket: context.state.config.ui.uploadS3BucketName,
+      Key: documentKey,
+    };
+  
+    s3.putObject(s3Params, function(err, data) {
+      if (err) {
+        console.log(err, err.stack); // an error occurred
+        context.commit('pushMessage', {
+          type: 'bot',
+          text: context.state.config.ui.uploadFailureMessage,
+        });
+      } 
+      else {
+        console.log(data);           // successful response
+        const documentObject = {
+          s3Path: 's3://' + context.state.config.ui.uploadS3BucketName + '/' + documentKey,
+          fileName: file.name
+        };
+        var documentsValue = [documentObject];
+        if (context.state.lex.sessionAttributes.userFilesUploaded) {
+          documentsValue = JSON.parse(context.state.lex.sessionAttributes.userFilesUploaded)
+          documentsValue.push(documentObject);
+        }
+        context.commit("setLexSessionAttributeValue",  { key: 'userFilesUploaded', value: JSON.stringify(documentsValue) });
+        if (context.state.config.ui.uploadSuccessMessage.length > 0) {
+          context.commit('pushMessage', {
+            type: 'bot',
+            text: context.state.config.ui.uploadSuccessMessage,
+          });
+        }
+        return Promise.resolve();
+      }
+    });
   },
 };

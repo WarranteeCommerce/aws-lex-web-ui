@@ -80,9 +80,9 @@ There are two distinct mechanisms for changing the background color.
 1) Update lex-web-ui-loader-config.json. Change the property ui.toolbarColor. You must select a value
 from.
 https://vuetifyjs.com/en/styles/colors#
-2) OR use the following in css
+2) OR use the following in css to overwrite the color of the default red CSS
 ```
-.toolbar.theme--dark {
+.bg-red {
   background-color: #2b2b2b !important;
 }
 ```
@@ -142,6 +142,13 @@ Set background of the bot's response messages
 ```
 .message-human .message-bubble {
   background-color: #afcffa !important;
+}
+```
+//todo verify and set
+##### Hide the first input message / initial utterance
+```
+.message-human:first-of-type {
+  display:none;
 }
 ```
 
@@ -214,6 +221,14 @@ Set background of the bot's response messages
 .input-group--text-field textarea,
 .input-group--text-field label {
     font-size: 14px !important;
+}
+```
+
+#### End Connect Live Chat Button
+```
+button.end-live-chat-button.btn {
+  color: white !important;
+  background-color: red !important
 }
 ```
 

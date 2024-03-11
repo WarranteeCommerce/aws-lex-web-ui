@@ -4,6 +4,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.21.0] - 2024-03-01
+- Upgraded the existing solution and relevant dependencies to Vue 3. Migrating from Vuetify 1.5 -> 3 in the process, skipping over Vuetify 2 entirely, requiring clean-up and reconfiguration of all UI components. Goal was to get parity in UI from the previous release, which includes some new CSS rules to maintain the look at feel of the previous UI. These changes could result in **breaking changes** to custom CSS despite efforts to maintain backwards compatibilty many Vuetify classes changed names during the upgrade. Please use caution when updating to this version of the Lex Web UI UI.
+
+## [0.20.6] - 2024-02-12
+- Emergency fix to upgrade Python function to version 3.8 across the board. As this will end of life later in the year we will release another update soon to move everything to 3.12.
+
+## [0.20.5] - 2024-1-19
+- Update Lamdba functions using Node to version 18. This required upgrading the Lambda code to use the JS SDK v3 as well.
+- Dependency upgrades to fix critical vulnerabilities.
+
+## [0.20.4] - 2023-12-27
+- Add support for file attachments. See new File Uploads README for full details.
+- Clean-up & fix issues related to webpack 5 and `npm run` related errors for some build types.
+
+## [0.20.3] - 2023-12-7
+- Add streaming support. Refer to Streaming Responses README for full details.
+- Fixed bug where CSS was not being properly applied to minimized button color.
+
+## [0.20.2] - 2023-11-28
+- Adjust handling of Elicit Intent response to account for no interpretations from Lex. Precreate mp3 audio files needed for voice response as default un-authenticated role can't use Polly to create these responses dynamically.
+- Dependency upgrades to fix critical vulnerabilities.
+
+## [0.20.1] - 2023-10-24
+- Removed breaking change of adding CSP configurations into Cloudfront. CSP will remain in place on index.html file but Cloudfront CSPs will need to be manually configured. As a result removed MarkdownSupportDomains parameter.
+- Minor bug fixes.
+- Dependency upgrades to fix critical vulnerabilities.
+
+## [0.20.0] - 2023-09-28
+- **BREAKING CHANGE**: Removed all inline scripts and added a CSP header to the index.html as well as CSP configurations to CloudFront. If your bot uses Markdown please not you will need to allow list all domains serving image/video using the MarkdownSupportDomains parameter (parent origin is automatically added to the CSP so no action is required in this case). Existing bots updating to this version & using Markdown **will break** if appropriate domains are not supplied.
+- CSS adjustments can now be made directly in the CloudFormation template for some common use cases. If left blank
+- Major updates to dependencies and webpack build processes for both the loader & web ui projects.
+This update removes all dependency vulnerabilities as of release date.
+- Dependencies used by the loader have been internalized to remove calls to external CDNs
+- Cognito self-registration is now domain limited. If you want self-registration on you must provide a list of valid domains otherwise self-registration is turned off on the Cognito instance.
+- Lowered the default timeout for Connect connections to 60 minutes.
+
+## [0.19.9] - 2023-05-22
+- Add configurable parameter to control delay between transcript message send on startup to Connect. Workaround Connect problem with respect to out of order delivery of sent messages.
+- Add the ability to configure a precreated CNAME, ACM Certificate, and WAFV2 ACL via template parameters. If the values are left empty default CloudFront distribution url and certificates is used. If a WAFV2 ACl is not supplied then no WAF Acl is configured for use by CloudFront.
+
+## [0.19.8] - 2023-04-15
+- Update CloudFormation template to remove ACL on S3 server access logs bucket and replaced with a bucket policy to align with best practices. This will also prevent the template from failing when the default settings for S3 buckets are changed in the near future.
+- Fixed issue where multilingual bots were not properly rendering the TimePicker interactive message component
+
+## [0.19.7] - 2023-03-27
+- Update to not allow V1 and V2 bots to be selected in CloudFormation parameters 
+- Disable initial utterance sending if chat window is minimized on load
+- Reduced minimized width of iframe to prevent overflow covering up page elements
+- Rearrange live chat button locations for better UI experience
+
+## [0.19.6] - 2022-10-17
+- Fix issue where some empty string variables would break the Code Deploy build, for example, if InitialText was cleared out of the CloudFormation parameters.
+- Added more CloudFormation parameters for commonly used UI properties. The new variables include:
+    * HideButtonMessageBubble
+    * MessageMenu
+    * BackButton
+    * MinimizedButtonContent
+- Change initial speech mechanism to fetch and play mp3 files created during codebuild. Implement support for configured localeIds when creating the mp3 files. Create an mp3 for each configured localeId and use aws translate to generate text for the locale and use aws polly to create the mp3 files. When the user changes locale in the UI and clicks on the mic button, the initial speech for the selected locale will be played.
+- Add support for Connect interactive messaging into Lex Web UI: [https://docs.aws.amazon.com/connect/latest/adminguide/interactive-messages.html](https://docs.aws.amazon.com/connect/latest/adminguide/interactive-messages.html). Both ListPicker and TimePicker are supported templateTypes and can be sent using the exact same JSON structure as Connect. Additionally, added support for a DateTimePicker templateType which will give the end user an open-ended selector for a date/time variable to send back to Lex.
+- Fix handling the new ElicitIntent dialogAction type LexV2 response, which does not have some expected properties on the sessionState object
+
 ## [0.19.5] - 2022-07-17
 - Updated README to be more clear
 - Updated Connect chat README

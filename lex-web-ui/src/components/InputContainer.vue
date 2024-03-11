@@ -1,95 +1,90 @@
 <template>
-  <div app fixed>
-    <v-layout
-      row
-      justify-space-between
-      ma-0
-      class="input-container"
-    >
-      <v-toolbar
-        color="white"
-        v-bind:dense="this.$store.state.isRunningEmbedded"
+  <v-toolbar elevation="3" color="white" :dense="this.$store.state.isRunningEmbedded" class="toolbar-content">
+    <!--
+      using v-show instead of v-if to make recorder-status transition work
+    -->
+      <!--
+        using v-show instead of v-if to make recorder-status transition work
+      -->
+      <v-text-field
+        :label="textInputPlaceholder"
+        v-show="shouldShowTextInput"
+        :disabled="isLexProcessing"
+        v-model="textInput"
+        @keyup.enter.stop="postTextMessage"
+        @focus="onTextFieldFocus"
+        @blur="onTextFieldBlur"
+        @update:model-value="onKeyUp"
+        ref="textInput"
+        id="text-input"
+        name="text-input"
+        single-line
+        hide-details
+        density="compact"
+        variant="underlined"
+        class="toolbar-text"
       >
-        <!--
-          using v-show instead of v-if to make recorder-status transition work
-        -->
-        <v-text-field
-          v-bind:label="textInputPlaceholder"
-          v-show="shouldShowTextInput"
-          v-bind:disabled="isLexProcessing"
-          v-model="textInput"
-          v-on:keyup.enter.stop="postTextMessage"
-          v-on:focus="onTextFieldFocus"
-          v-on:blur="onTextFieldBlur"
-          @input="onKeyUp"
-          ref="textInput"
-          id="text-input"
-          name="text-input"
-          single-line
-          hide-details
-        ></v-text-field>
+    </v-text-field>
 
-        <recorder-status
-          v-show="!shouldShowTextInput"
-        ></recorder-status>
+      <recorder-status
+        v-show="!shouldShowTextInput"
+      ></recorder-status>
 
-        <!-- separate tooltip as a workaround to support mobile touch events -->
-        <!-- tooltip should be before btn to avoid right margin issue in mobile -->
-        <v-tooltip
-          activator=".input-button"
-          content-class="tooltip-custom"
-          v-model="shouldShowTooltip"
-          ref="tooltip"
-          left
-        >
-          <span id="input-button-tooltip">{{inputButtonTooltip}}</span>
-        </v-tooltip>
-        <v-tooltip
-          activator=".end-live-chat-button"
-          content-class="tooltip-custom"
-          v-model="shouldShowEndLiveChatTooltip"
-          ref="tooltipEndLiveChat"
-          left
-        >
-          <span id="input-button-tooltip">End Live Chat</span>
-        </v-tooltip>
-
-        <v-btn
-          v-if="shouldShowSendButton"
-          v-on:click="postTextMessage"
-          v-on="tooltipEventHandlers"
-          v-bind:disabled="isLexProcessing"
-          ref="send"
-          class="icon-color input-button"
-          icon
-          aria-label="Send Message"
-        >
-          <v-icon medium>send</v-icon>
-        </v-btn>
-        <v-btn
-          v-if="!shouldShowSendButton && !isModeLiveChat"
-          v-on:click="onMicClick"
-          v-on="tooltipEventHandlers"
-          v-bind:disabled="isMicButtonDisabled"
-          ref="mic"
-          class="icon-color input-button"
-          icon
-        >
-          <v-icon medium>{{micButtonIcon}}</v-icon>
-        </v-btn>
-        <v-btn
-          v-if="isModeLiveChat"
-          v-on:click="onEndLiveChatClick"
-          v-on="tooltipEndLiveChatEventHandlers"
-          ref="endLiveChat"
-          class="end-live-chat-button"
-          aria-label="End Live Chat"
-        >
-          <v-icon medium>call_end</v-icon>
-        </v-btn>
-      </v-toolbar>
-    </v-layout>
-  </div>
+            <!-- separate tooltip as a workaround to support mobile touch events -->
+    <!-- tooltip should be before btn to avoid right margin issue in mobile -->
+    <v-btn
+      v-if="shouldShowSendButton"
+      @click="postTextMessage"
+      :disabled="isLexProcessing || isSendButtonDisabled"
+      ref="send"
+      class="icon-color input-button"
+      aria-label="Send Message"
+    >
+      <v-tooltip activator="parent" location="start">
+        <span id="input-button-tooltip">{{ inputButtonTooltip }}</span>
+      </v-tooltip>
+      <v-icon size="x-large">send</v-icon>
+    </v-btn>
+    <v-btn
+      v-if="!shouldShowSendButton && !isModeLiveChat"
+      @click="onMicClick"
+      v-on="tooltipEventHandlers"
+      :disabled="isMicButtonDisabled"
+      ref="mic"
+      class="icon-color input-button"
+      icon
+    >
+      <v-tooltip activator="parent" v-model="shouldShowTooltip" location="start">
+        <span id="input-button-tooltip">{{ inputButtonTooltip }}</span>
+      </v-tooltip>
+      <v-icon size="x-large">{{ micButtonIcon }}</v-icon>
+    </v-btn>
+    <v-btn
+      v-if="shouldShowUpload"
+      v-on:click="onPickFile"
+      v-bind:disabled="isLexProcessing"
+      ref="upload"
+      class="icon-color input-button"
+      icon
+    >
+      <v-icon size="x-large">attach_file</v-icon>
+      <input
+        type="file"
+        style="display: none"
+        ref="fileInput"
+        @change="onFilePicked">
+    </v-btn>
+    <v-btn
+      v-if="shouldShowAttachmentClear"
+      v-on:click="onRemoveAttachments"
+      v-bind:disabled="isLexProcessing"
+      ref="removeAttachments"
+      class="icon-color input-button"
+      icon
+    >
+      <v-icon size="x-large">clear</v-icon>
+    </v-btn>
+  </v-toolbar>
 </template>
 
 <script>
@@ -116,7 +111,7 @@ export default {
       textInput: '',
       isTextFieldFocused: false,
       shouldShowTooltip: false,
-      shouldShowEndLiveChatTooltip: false,
+      shouldShowAttachmentClear: false,
       // workaround: vuetify tooltips doesn't seem to support touch events
       tooltipEventHandlers: {
         mouseenter: this.onInputButtonHoverEnter,
@@ -124,13 +119,6 @@ export default {
         touchstart: this.onInputButtonHoverEnter,
         touchend: this.onInputButtonHoverLeave,
         touchcancel: this.onInputButtonHoverLeave,
-      },
-      tooltipEndLiveChatEventHandlers: {
-        mouseenter: this.onEndLiveChatButtonHoverEnter,
-        mouseleave: this.onEndLiveChatButtonHoverLeave,
-        touchstart: this.onEndLiveChatButtonHoverEnter,
-        touchend: this.onEndLiveChatButtonHoverLeave,
-        touchcancel: this.onEndLiveChatButtonHoverLeave,
       },
     };
   },
@@ -190,11 +178,18 @@ export default {
     shouldShowSendButton() {
       return (
         (this.textInput.length && this.isTextFieldFocused) ||
-        (!this.isRecorderSupported || !this.isRecorderEnabled)
+        (!this.isRecorderSupported || !this.isRecorderEnabled) ||
+        (this.isModeLiveChat)
       );
     },
     shouldShowTextInput() {
       return !(this.isBotSpeaking || this.isSpeechConversationGoing);
+    },
+    shouldShowUpload() {
+      return (
+        (this.$store.state.isLoggedIn && this.$store.state.config.ui.uploadRequireLogin && this.$store.state.config.ui.enableUpload) ||
+        (!this.$store.state.config.ui.uploadRequireLogin && this.$store.state.config.ui.enableUpload)
+      )
     },
   },
   methods: {
@@ -203,12 +198,6 @@ export default {
     },
     onInputButtonHoverLeave() {
       this.shouldShowTooltip = false;
-    },
-    onEndLiveChatButtonHoverEnter() {
-      this.shouldShowEndLiveChatTooltip = true;
-    },
-    onEndLiveChatButtonHoverLeave() {
-      this.shouldShowEndLiveChatTooltip = false;
     },
     onMicClick() {
       this.onInputButtonHoverLeave();
@@ -236,7 +225,7 @@ export default {
       // focus() needs to be wrapped in setTimeout for IE11
       setTimeout(() => {
         if (this.$refs && this.$refs.textInput && this.shouldShowTextInput) {
-          this.$refs.textInput.$refs.input.focus();
+          this.$refs.textInput.focus();
         }
       }, 10);
     },
@@ -246,11 +235,9 @@ export default {
           this.$store.state.lex.dialogState === initialState
         ));
 
-      return (this.$store.state.isLoggedIn && isInitialState &&
-        this.initialSpeechInstruction.length > 0) ?
+      return (isInitialState && this.initialSpeechInstruction.length > 0) ?
         this.$store.dispatch(
-          'pollySynthesizeSpeech',
-          this.initialSpeechInstruction,
+          'pollySynthesizeInitialSpeech'
         ) :
         Promise.resolve();
     },
@@ -267,6 +254,16 @@ export default {
         text: this.textInput,
       };
 
+      // Add attachment filename to message
+      if (this.$store.state.lex.sessionAttributes.userFilesUploaded) {
+        const documents = JSON.parse(this.$store.state.lex.sessionAttributes.userFilesUploaded)
+
+        message.attachements = documents
+          .map(function(att) {
+            return att.fileName;
+          }).toString();
+      }
+
       return this.$store.dispatch('postTextMessage', message)
         .then(() => {
           this.textInput = '';
@@ -275,16 +272,19 @@ export default {
           }
         });
     },
-    onEndLiveChatClick() {
-      this.shouldShowEndLiveChatTooltip = false;
-      this.$emit('endLiveChatClicked');
-    },
     startSpeechConversation() {
       if (this.isMicMuted) {
         return Promise.resolve();
       }
       return this.setAutoPlay()
         .then(() => this.playInitialInstruction())
+        .then(() => {
+            return new Promise(function(resolve, reject) {
+              setTimeout(() => {
+                resolve();
+              }, 100)
+            });
+          })
         .then(() => this.$store.dispatch('startConversation'))
         .catch((error) => {
           console.error('error in startSpeechConversation', error);
@@ -312,6 +312,34 @@ export default {
       }
       return this.$store.dispatch('setAudioAutoPlay');
     },
+    onPickFile () {
+      this.$refs.fileInput.click()
+    },
+    onFilePicked (event) {
+      const files = event.target.files
+      if (files[0] !== undefined) {
+        this.fileName = files[0].name
+        // Check validity of file
+        if (this.fileName.lastIndexOf('.') <= 0) {
+          return
+        }
+        // If valid, continue
+        const fr = new FileReader()
+        fr.readAsDataURL(files[0])
+        fr.addEventListener('load', () => {
+          this.fileObject = files[0] // this is an file that can be sent to server...
+          this.$store.dispatch('uploadFile', this.fileObject);
+          this.shouldShowAttachmentClear = true;
+        })
+      } else {
+        this.fileName = '';
+        this.fileObject = null;
+      }
+    },
+    onRemoveAttachments() {
+      delete this.$store.state.lex.sessionAttributes.userFilesUploaded;
+      this.shouldShowAttachmentClear = false;
+    },
   },
 };
 </script>
@@ -327,4 +355,14 @@ export default {
   right: 0;
   right: env(safe-area-inset-right);
 }
+
+.toolbar-content {
+  padding-left: 16px;
+  font-size: 16px !important;
+}
+
+.v-input {
+  margin-bottom: 10px;
+}
+
 </style>
