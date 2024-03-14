@@ -11,7 +11,7 @@
   },
   "ui": {
     "parentOrigin": "http://localhost:8000",
-    "toolbarTitle": "Any Cover",
+    "toolbarTitle": "AnyCover",
     "toolbarLogo": "",
     "positiveFeedbackIntent": "Thumbs up",
     "negativeFeedbackIntent": "Thumbs down",

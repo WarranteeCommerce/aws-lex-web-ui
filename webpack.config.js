@@ -15,7 +15,7 @@ const VERSION = require('./package.json').version;
 
 const basePath = __dirname;
 const distDir = path.join(basePath, 'dist');
-const assetsDir = path.resolve(__dirname, 'lex-web-ui/dist/bundle');
+const assetsDir = path.resolve(__dirname, 'lex-web-ui/dist');
 const devServerPort = (process.env.PORT) ? Number(process.env.PORT) : 8000;
 
 module.exports = (env) => {
@@ -41,6 +41,7 @@ module.exports = (env) => {
             buffer: require.resolve('buffer/'),
             stream: require.resolve('stream-browserify'),
             'process/browser': require.resolve('process/browser'),
+            "vm": false
         },
     },
     module: {
