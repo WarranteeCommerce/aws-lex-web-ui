@@ -43,6 +43,7 @@ export default {
     isProcessing: false,
     isPostTextRetry: false,
     retryCountPostTextTimeout: 0,
+    allowStreamingResponses: false,
     inputTranscript: '',
     intentName: '',
     message: '',
@@ -94,6 +95,7 @@ export default {
   isSFXOn: (config.ui) ? (!!config.ui.enableSFX &&
     !!config.ui.messageSentSFX && !!config.ui.messageReceivedSFX) : false,
   isUiMinimized: false, // when running embedded, is the iframe minimized?
+  initialUtteranceSent: false, // has the initial utterance already been sent
   isEnableLogin: false, // true when a login/logout menu should be displayed
   isForceLogin: false, // true when a login/logout menu should be displayed
   isLoggedIn: false, // when running with login/logout enabled
@@ -105,4 +107,12 @@ export default {
   awsCreds: {
     provider: 'cognito', // cognito|parentWindow
   },
+
+  streaming:{
+    wssEndpointWithStage:'', // wss://{domain}/{stage}
+    wsMessages:[],
+    wsMessagesCurrentIndex:0,
+    wsMessagesString:'',
+    isStartingTypingWsMessages:true
+  }
 };

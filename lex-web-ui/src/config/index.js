@@ -45,7 +45,7 @@ if (!envShortName) {
 
 // eslint-disable-next-line import/no-dynamic-require
 const configEnvFile = (process.env.BUILD_TARGET === 'lib') ?
-  {} : require(`./config.${envShortName}.json`);
+  {} : await import(`./config.${envShortName}.json`);
 
 // default config used to provide a base structure for
 // environment and dynamic configs
@@ -74,6 +74,8 @@ const configDefault = {
     waitingForAgentMessageIntervalSeconds: 60,
     // Terms to start live chat
     liveChatTerms: 'live chat',
+    // The delay to use between sending transcript blocks to connect
+    transcriptMessageDelayInMsec: 150,
   },
   lex: {
     // Lex V2 fields
@@ -134,6 +136,12 @@ const configDefault = {
 
     // defines the retry count. default is 1. Only used if retryOnLexError is set to true.
     retryCountPostTextTimeout: 1,
+
+    // allows the Lex bot to use streaming responses for integration with LLMs or other streaming protocols
+    allowStreamingResponses: false,
+
+     // web socket endpoint for streaming
+     streamingWebSocketEndpoint: '',
   },
 
   polly: {
@@ -170,7 +178,19 @@ const configDefault = {
     // chat window title
     toolbarTitle: 'Order Flowers',
 
-    // logo used in toolbar - also used as favicon not specificied
+    // toolbar menu start live chat label
+    toolbarStartLiveChatLabel: "Start Live Chat",
+
+    // toolbar menu / btn stop live chat label
+    toolbarEndLiveChatLabel: "End Live Chat",
+
+    // toolbar menu icon for start live chat
+    toolbarStartLiveChatIcon: "people_alt",
+
+    // toolbar menu / btn icon for end live chat
+    toolbarEndLiveChatIcon: "call_end",
+
+    // logo used in toolbar - also used as favicon not specified
     toolbarLogo: '',
 
     // fav icon
@@ -277,6 +297,13 @@ const configDefault = {
 
     // Optionally enable live chat via AWS Connect
     enableLiveChat: false,
+
+    // Optionally enable file upload
+    enableUpload: false,
+    uploadS3BucketName: '',
+    uploadSuccessMessage: '',
+    uploadFailureMessage: 'Document upload failed',
+    uploadRequireLogin: true,
   },
 
   /* Configuration to enable voice and to pass options to the recorder
@@ -333,6 +360,10 @@ const configDefault = {
     // used to control maximum number of consecutive silent recordings
     // before the conversation is ended
     silentConsecutiveRecordingMax: 3,
+  },
+
+  iframe: {
+    shouldLoadIframeMinimized: false,
   },
 
   // URL query parameters are put in here at run time

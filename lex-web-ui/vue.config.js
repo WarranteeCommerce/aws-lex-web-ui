@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const webpack = require('webpack');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 const distDir = path.resolve(__dirname, 'dist');
 const assetsDir = path.resolve(__dirname, 'src/assets');
@@ -73,6 +74,18 @@ function chainWebpackWorker(config, destDir = '', srcDir = 'src/lib') {
     .use('babel-loader')
     .loader('babel-loader')
     .end();
+
+  // custom components
+  config.module
+    .rule('vue')
+    .use('vue-loader')
+    .tap(options => {
+      options.compilerOptions = {
+        ...options.compilerOptions,
+        isCustomElement: tag => tag.startsWith('v-datetime-picker')
+      }
+      return options
+    });
 }
 
 function chainWebpackCommon(config, destDir) {
@@ -85,7 +98,7 @@ function chainWebpackCommon(config, destDir) {
     })
     .end();
 
-  config.devtool((buildType.isProd) ? false : '#source-map');
+  config.devtool(buildType.isProd ? false : 'source-map');
 
   chainWebpackWorker(config, destDir);
 
@@ -96,6 +109,17 @@ function chainWebpackCommon(config, destDir) {
       return args;
     })
     .end();
+
+  config.plugin('define').tap((definitions) => {
+    Object.assign(definitions[0], {
+      __VUE_OPTIONS_API__: 'true',
+      __VUE_PROD_DEVTOOLS__: 'false',
+      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
+    })
+    return definitions
+  })
+
+  config.plugin('NodePolyfillPlugin').use(new NodePolyfillPlugin());
 }
 
 function chainWebpackLib(
@@ -125,12 +149,14 @@ function chainWebpackLib(
     // XXX TODO need to add dependencies below to the lex-web-ui-loader
     // 'jsonwebtoken',
     // 'marked',
-    'vue',
-    'vuex',
+    { 'vue': 'Vue' },
+    {'vuex': 'Vuex'},
     'vue-router',
-    'vuetify',
+    {'vuetify': 'Vuetify'},
     /^aws-sdk\/.+$/,
   ]);
+
+  config.externalsType = 'window';
 
   config.optimization.splitChunks({
     cacheGroups: {
@@ -185,7 +211,17 @@ function chainWebpackLib(
     }]);
 }
 
-function chainWebpackApp(config, destDir = '') {
+function chainWebpackApp(
+  config,
+  entryName = 'lex-web-ui',
+  entryFileName = './src/lex-web-ui.js',
+  destDir = ''
+) {
+
+  config
+    .entry(entryName)
+    .add(entryFileName);
+
   config.output.filename(
     (buildType.isProd) ? '[name].min.js' : '[name].js',
   );
@@ -207,7 +243,7 @@ function chainWebpackApp(config, destDir = '') {
     .tap((args) => {
       // unshift to have lower precedence
       // from the default vue cli `public` rule
-      args[0].unshift(
+      args[0].patterns.unshift(
         // favicon.png
         {
           from: getAssetPath(favIconPath, flowerLogoPath),

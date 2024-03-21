@@ -5,7 +5,7 @@ function mobileCheck() {
 };
 
 function scrollToBottomOfMsgContainer(){
-    let container = document.getElementsByClassName('content')[0];
+    let container = document.getElementsByClassName('v-main')[0];
     container.scrollTo({
         top: container.scrollHeight,
         behavior: "smooth"

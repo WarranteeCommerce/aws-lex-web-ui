@@ -1,8 +1,14 @@
+/*!***************************************************************************************!*\
+  !*** css ../../../node_modules/css-loader/dist/cjs.js!../css/lex-web-ui-fullpage.css ***!
+  \***************************************************************************************/
 #lex-web-ui-fullpage {
   height: 100%;
   width: 100%;
 }
 
+/*!*************************************************************************************!*\
+  !*** css ../../../node_modules/css-loader/dist/cjs.js!../css/lex-web-ui-iframe.css ***!
+  \*************************************************************************************/
 .lex-web-ui-iframe {
   bottom: 1.5rem;
   display: none; /* hidden by default changed once iframe is loaded */
@@ -31,6 +37,7 @@
   max-width: 190px !important;
   max-height: 85px !important;
   border-radius: 85px !important;
+  min-width: 190px !important;
 }
 
 /* disable box shadow when minimized */

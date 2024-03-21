@@ -42,6 +42,12 @@ Parameters:
         S3 object zip file containing Lambda custom resource functions
       Default: artifacts/aws-lex-web-ui/artifacts/initiate-chat-lambda.zip
 
+    StreamingLambdaCodeObject:
+      Type: String
+      Description: >
+        S3 object zip file containing Lambda custom resource functions
+      Default: artifacts/aws-lex-web-ui/artifacts/streaming-lambda.zip
+
     CleanupBuckets:
         Type: String
         Default: true
@@ -81,6 +87,13 @@ Parameters:
         - false
         Description: >
             If set to True, Markdown formatting in ResponseCards will be enabled.
+
+    MarkdownSupportDomains:
+        Type: String
+        Default: ''
+        Description: >
+            If enabling Markdown support, provide a space-seperated list of allowable sources 
+            for content (images/video). Any domain not listed here will be blocked by Content Security Policy.
 
     ReInitSessionAttributesOnRestart:
         Type: String
@@ -192,6 +205,36 @@ Parameters:
         - false
         Description: >
             Attach chat transcript as file. This only works if you enable
+
+    ConnectStartLiveChatLabel:
+      Type: String
+      Description: >
+        Label used in Menu to start connect live chat
+      Default: "Start Live Chat"
+
+    ConnectStartLiveChatIcon:
+      Type: String
+      Description: >
+        Icon to use in menu to start connect live chat
+      Default: "people_alt"
+
+    ConnectEndLiveChatLabel:
+      Type: String
+      Description: >
+        Label to use in menu and toolbar to end connect live chat
+      Default: "End Live Chat"
+
+    ConnectEndLiveChatIcon:
+      Type: String
+      Description: >
+        Icon to use in menu and toolbar to end connect live chat
+      Default: "call_end"
+
+    ConnectTranscriptMessageDelayInMsec:
+      Type: Number
+      Description: >
+        Delay to insert between each transcript message send to Connect in msec.
+      Default: 150
 
     LexV2BotId:
       Description: >
@@ -311,6 +354,26 @@ Parameters:
         Default: Order Flowers
         Description: Title displayed in the chatbot UI toolbar
 
+    WebAppConfCname:
+        Type: String
+        Default: ""
+        Description: This optional parameter allows a single CNAME to be defined and used as an alias to
+            the cloudfront distribution that is created by this template. If a CNAME is provided, a 
+            WebAppAcmCertificateArn must also be provided.
+
+    WebAppAcmCertificateArn:
+        Type: String
+        Default: ""
+        Description: This optional parameter allows a AcmCertificateArn to be provided for use in the Cloudfront
+            distribution created by this template. if a AcmCertificateArn is provided, a WebAppConfCname must also
+            be provided.
+
+    WebAppWafAclArn:
+      Type: String
+      Default: ""
+      Description: This optional parameter allows a AWS WAF web ACL to be specified in ARN formation. This supports
+        AWS WAF V2.
+
     SaveHistory:
         Type: String
         Default: false
@@ -330,6 +393,40 @@ Parameters:
         Description: >
           This is an optional parameter, if set to True, the AWS Connect live Chat functionality will be available.
           A item to start a live chat will appear at the menu.
+    
+    HideButtonMessageBubble:
+        Type: String
+        Default: false
+        AllowedValues:
+          - true
+          - false
+        Description: >
+          If set to true, hide the message bubble on a response card button press
+    
+    MessageMenu:
+        Type: String
+        Default: false
+        AllowedValues:
+          - true
+          - false
+        Description: >
+          If set to true, each message will have an additional clickable menu on 
+          messages sent to the bot allowing you to repeat that message.
+
+    BackButton:
+        Type: String
+        Default: false
+        AllowedValues:
+          - true
+          - false
+        Description: >
+          If set to true, will show a back button to go back to a previous message.
+
+    MinimizedButtonContent:
+        Type: String
+        Default: ''
+        Description: >
+          This is an optional parameter, if populated will display provided text when chat window is minimized.
 
     retryOnLexPostTextTimeout:
         Type: String
@@ -360,10 +457,103 @@ Parameters:
         Description: >
           This will be a prefix for resources that must have unique names.
 
+    ## CSS Configuration Options
+    MessageTextColor:
+        Type: String
+        Default: ''
+        Description: >
+         Optional parameter, leave empty to retain previous settings. 
+         Sets the color of the message text, can be a valid CSS color or Hex value
+
+    MessageFont:
+        Type: String
+        Default: ''
+        Description: >
+         Sets the font style of the messages sent by the agent and customer
+
+    ChatBackgroundColor:
+        Type: String
+        Default: ''
+        Description: >
+         Optional parameter, leave empty to retain previous settings. 
+         Sets the background color of the message area, can be a valid CSS color or Hex value
+
+    ToolbarColor:
+        Type: String
+        Default: ''
+        Description: >
+         Optional parameter, leave empty to retain previous settings. 
+         Sets the background color of the toolbar, can be a valid CSS color or Hex value
+
+    BotChatBubble:
+        Type: String
+        Default: ''
+        Description: >
+         Optional parameter, leave empty to retain previous settings. 
+         Sets the background color of the bubble for the bot, can be a valid CSS color or Hex value
+    
+    CustomerChatBubble:
+        Type: String
+        Default: ''
+        Description: >
+         Optional parameter, leave empty to retain previous settings. 
+         Sets the background color of the bubble for the customer, can be a valid CSS color or Hex value.
+
+    MinimizedButtonColor:
+        Type: String
+        Default: ''
+        Description: >
+         Optional parameter, leave empty to retain previous settings. 
+         Sets the background color of the button displayed when the chat is minimized, can be a valid CSS color or Hex value.
+
+    TitleLogoImgUrl:
+        Type: String
+        Default: ''
+        Description: >
+         This is an optional parameter, when set to an image URL that is accessible by the application it will 
+         display the image left of the toolbar title. Image must be formatted to the correct size for display.
+
+    BotAvatarImgUrl:
+        Type: String
+        Default: ''
+        Description: >
+         This is an optional parameter, when set to an image URL that is accessible by the application it will 
+         display on the left of all bot messages
+    
+    AllowStreamingResponses:
+        Type: String
+        Default: false
+        AllowedValues:
+        - true
+        - false
+        Description: >
+            If set to True, a websocket API Gateway will be established and messages will be sent to this web socket
+            in addition to the Lex bot directly.
+    
+    ShouldEnableUpload:
+        Type: String
+        Default: false
+        AllowedValues:
+          - true
+          - false
+        Description: >
+            If set to True, the upload document functionality will be available. The icon for uploading documents
+            will appear in the UI.
+
+    UploadBucket:
+        Type: String
+        Default: ''
+        Description: >
+            If enabling upload, the name of the S3 bucket where uploaded documents should be stored
+             
 Conditions:
     NeedsParentOrigin: !Equals [!Ref ParentOrigin, '']
     ShouldCleanupBuckets: !Equals [!Ref CleanupBuckets, true]
     EnableLiveChat: !Equals [!Ref ShouldEnableLiveChat, true]
+    UseDefaultCloudfrontUrl: !Or [ !Equals [!Ref WebAppConfCname, ''], !Equals [!Ref WebAppAcmCertificateArn, ''] ]
+    ShouldNotSpecifyWafAcl: !Equals [!Ref WebAppWafAclArn, '']
+    EnableStreaming: !Equals [!Ref AllowStreamingResponses, true]
+    EnableUpload: !Equals [!Ref ShouldEnableUpload, true]
 
 Resources:
     # Bucket where S3 access logs are stored
@@ -374,7 +564,6 @@ Resources:
         Properties:
           VersioningConfiguration:
             Status: Enabled
-          AccessControl: "LogDeliveryWrite"
           BucketEncryption:
             ServerSideEncryptionConfiguration:
               - ServerSideEncryptionByDefault:
@@ -407,12 +596,37 @@ Resources:
                       AllowedOrigins:
                         - !Ref ParentOrigin
 
+    S3ServerAccessLogsBucketPolicy:
+        Type: "AWS::S3::BucketPolicy"
+        Properties:
+          Bucket:
+            Ref: "S3ServerAccessLogs"
+          PolicyDocument:
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "s3:PutObject"
+                Resource:
+                  - !Sub "arn:aws:s3:::${S3ServerAccessLogs}/*"
+                Principal:
+                  Service: "logging.s3.amazonaws.com"
+                Condition:
+                  ArnLike:
+                    aws:SourceArn:
+                      - !Sub "arn:aws:s3:::${WebAppBucket}"
+                  StringEquals:
+                    aws:SourceAccount:
+                      - !Sub "${AWS::AccountId}"
+
     # Bucket for CloudFrontDistributionLogs
     LexWebUiCloudFrontDistributionLogsBucket:
       Type: AWS::S3::Bucket
       UpdateReplacePolicy: Retain
       DeletionPolicy: Retain
       Properties:
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: BucketOwnerPreferred
         VersioningConfiguration:
           Status: Enabled
         BucketEncryption:
@@ -523,8 +737,23 @@ Resources:
               OriginRequestPolicyId: "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
               ViewerProtocolPolicy: redirect-to-https
               ResponseHeadersPolicyId: !GetAtt LexWebUIResponseHeaderPolicy.Id
+            Aliases:
+              !If
+                - UseDefaultCloudfrontUrl
+                - !Ref AWS::NoValue
+                - [ !Ref WebAppConfCname ]
             ViewerCertificate:
-              CloudFrontDefaultCertificate: true
+              !If
+                - UseDefaultCloudfrontUrl
+                - CloudFrontDefaultCertificate: true
+                - AcmCertificateArn: !Ref WebAppAcmCertificateArn
+                  MinimumProtocolVersion: TLSv1.2_2018
+                  SslSupportMethod: sni-only
+            WebACLId:
+              !If
+                - ShouldNotSpecifyWafAcl
+                - !Ref AWS::NoValue
+                - !Ref WebAppWafAclArn
             HttpVersion: http2
             IPV6Enabled: true
 
@@ -540,7 +769,29 @@ Resources:
               InitiateChatLambdaCodeObject: !Ref InitiateChatLambdaCodeObject
               ConnectContactFlowId: !Ref ConnectContactFlowId
               ConnectInstanceId: !Ref ConnectInstanceId
-              ParentOrigin: !Sub "https://${LexWebUiDistribution.DomainName}"
+              ParentOrigin:
+                !If
+                  - UseDefaultCloudfrontUrl
+                  - !Sub "https://${LexWebUiDistribution.DomainName}"
+                  - !Sub "https://${WebAppConfCname}"
+    
+    StreamingSupport:
+        Type: AWS::CloudFormation::Stack
+        Condition: EnableStreaming
+        Properties:
+            TimeoutInMinutes: 15
+            TemplateURL: !Sub "https://${SourceBucket}.s3.${AWS::Region}.amazonaws.com/${SourcePrefix}/templates/streaming-support.yaml"
+            Parameters:
+                ParentStackName: !Ref "AWS::StackName"
+                SourceBucket: !Ref SourceBucket
+                StreamingLambdaCodeObject: !Ref StreamingLambdaCodeObject
+                TableName: !Join ["-", [!Ref "AWS::StackName", "streaming"]]
+                ParentOrigin:
+                  !If
+                    - UseDefaultCloudfrontUrl
+                    - !Sub "https://${LexWebUiDistribution.DomainName}"
+                    - !Sub "https://${WebAppConfCname}"
+    
 
     CodeBuild:
         Type: AWS::CodeBuild::Project
@@ -551,7 +802,7 @@ Resources:
                 Type: NO_ARTIFACTS
             Environment:
                 Type: LINUX_CONTAINER
-                Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0
+                Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
                 ComputeType: BUILD_GENERAL1_SMALL
                 EnvironmentVariables:
                     - Name: BUILD_TYPE
@@ -580,6 +831,16 @@ Resources:
                       Value: !Ref ConnectChatEndedMessage
                     - Name: CONNECT_ATTACH_CHAT_TRANSCRIPT
                       Value: !Ref ConnectAttachChatTranscript
+                    - Name: CONNECT_START_LIVE_CHAT_LABEL
+                      Value: !Ref ConnectStartLiveChatLabel
+                    - Name: CONNECT_START_LIVE_CHAT_ICON
+                      Value: !Ref ConnectStartLiveChatIcon
+                    - Name: CONNECT_END_LIVE_CHAT_LABEL
+                      Value: !Ref ConnectEndLiveChatLabel
+                    - Name: CONNECT_END_LIVE_CHAT_ICON
+                      Value: !Ref ConnectEndLiveChatIcon
+                    - Name: CONNECT_TRANSCRIPT_MESSAGE_DELAY_IN_MSEC
+                      Value: !Ref ConnectTranscriptMessageDelayInMsec
                     - Name: APP_USER_POOL_CLIENT_ID
                       Value: !Ref CognitoAppUserPoolClientId
                     - Name: APP_USER_POOL_NAME
@@ -610,6 +871,14 @@ Resources:
                       Value: !Ref WebAppConfPositiveFeedback
                     - Name: HELP_INTENT
                       Value: !Ref WebAppConfHelp
+                    - Name: HIDE_BUTTON_MESSAGE_BUBBLE
+                      Value: !Ref HideButtonMessageBubble
+                    - Name: MESSAGE_MENU
+                      Value: !Ref MessageMenu
+                    - Name: BACK_BUTTON
+                      Value: !Ref BackButton
+                    - Name: MIN_BUTTON_CONTENT
+                      Value: !Ref MinimizedButtonContent
                     - Name: UI_TOOLBAR_TITLE
                       Value: !Ref WebAppConfToolbarTitle
                     - Name: ENABLE_LOGIN
@@ -645,6 +914,33 @@ Resources:
                       Value: !Ref retryCountPostTextTimeout
                     - Name: TIMESTAMP
                       Value: !Ref Timestamp
+                    - Name: MESSAGE_TEXT_COLOR
+                      Value: !Ref MessageTextColor
+                    - Name: MESSAGE_FONT
+                      Value: !Ref MessageFont
+                    - Name: CHAT_BACKGROUND_COLOR
+                      Value: !Ref ChatBackgroundColor
+                    - Name: TOOLBAR_COLOR
+                      Value: !Ref ToolbarColor
+                    - Name: AGENT_CHAT_BUBBLE
+                      Value: !Ref BotChatBubble
+                    - Name: CUSTOMER_CHAT_BUBBLE
+                      Value: !Ref CustomerChatBubble
+                    - Name: MINIMIZED_BUTTON_COLOR
+                      Value: !Ref MinimizedButtonColor
+                    - Name: UI_TOOLBAR_LOGO
+                      Value: !Ref TitleLogoImgUrl
+                    - Name: BOT_AVATAR_IMG_URL
+                      Value: !Ref BotAvatarImgUrl
+                    - Name: ALLOW_STREAMING_RESPONSES
+                      Value: !Ref AllowStreamingResponses
+                    - Name: STREAMING_WEB_SOCKET_ENDPOINT
+                      Value: !If [EnableStreaming, !Sub "wss://${StreamingSupport.Outputs.WebSocketId}.execute-api.${AWS::Region}.amazonaws.com/Prod", ""]
+                    - Name: ENABLE_UPLOAD
+                      Value: !Ref ShouldEnableUpload
+                    - Name: UPLOAD_BUCKET_NAME
+                      Value: !Ref UploadBucket
+
 
             ServiceRole: !GetAtt CodeBuildRole.Arn
             TimeoutInMinutes: 10
@@ -658,6 +954,7 @@ Resources:
                             commands:
                                 - aws configure set region "$AWS_DEFAULT_REGION"
                                 - make load-current-config
+                                - npm install                                
                                 - make config
                         post_build:
                             commands:
@@ -684,6 +981,11 @@ Resources:
             ConnectChatEndedMessage: !Ref ConnectChatEndedMessage
             ConnectAttachChatTranscript: !Ref ConnectAttachChatTranscript
             ConnectLiveChatTerms: !Ref ConnectLiveChatTerms
+            ConnectStartLiveChatLabel: !Ref ConnectStartLiveChatLabel
+            ConnectStartLiveChatIcon: !Ref ConnectStartLiveChatIcon
+            ConnectEndLiveChatLabel: !Ref ConnectEndLiveChatLabel
+            ConnectEndLiveChatIcon: !Ref ConnectEndLiveChatIcon
+            ConnectTranscriptMessageDelayInMsec: !Ref ConnectTranscriptMessageDelayInMsec
             WebAppBucket: !Ref WebAppBucket
             LexV2BotId: !Ref LexV2BotId
             LexV2BotAliasId: !Ref LexV2BotAliasId
@@ -696,6 +998,10 @@ Resources:
             WebAppConfNegativeFeedback: !Ref WebAppConfNegativeFeedback
             WebAppConfPositiveFeedback: !Ref WebAppConfPositiveFeedback
             WebAppConfHelp: !Ref WebAppConfHelp
+            HideButtonMessageBubble: !Ref HideButtonMessageBubble
+            MessageMenu: !Ref MessageMenu
+            BackButton: !Ref BackButton
+            MinimizedButtonContent: !Ref MinimizedButtonContent
             WebAppConfToolbarTitle: !Ref WebAppConfToolbarTitle
             ShouldEnableCognitoLogin: !Ref ShouldEnableCognitoLogin
             ShouldEnableLiveChat: !Ref ShouldEnableLiveChat
@@ -708,6 +1014,18 @@ Resources:
             ParentOrigin: !Ref ParentOrigin
             retryOnLexPostTextTimeout: !Ref retryOnLexPostTextTimeout
             retryCountPostTextTimeout: !Ref retryCountPostTextTimeout
+            MessageTextColor: !Ref MessageTextColor
+            MessageFont: !Ref MessageFont
+            ChatBackgroundColor: !Ref ChatBackgroundColor
+            ToolbarColor: !Ref ToolbarColor
+            BotChatBubble: !Ref BotChatBubble
+            CustomerChatBubble: !Ref CustomerChatBubble
+            MinimizedButtonColor: !Ref MinimizedButtonColor
+            TitleLogoImgUrl: !Ref TitleLogoImgUrl
+            BotAvatarImgUrl: !Ref BotAvatarImgUrl
+            AllowStreamingResponses: !Ref AllowStreamingResponses
+            ShouldEnableUpload: !Ref ShouldEnableUpload
+            UploadBucket: !Ref UploadBucket
             Timestamp: !Ref Timestamp
 
     # Lambda function for custom resource
@@ -719,7 +1037,7 @@ Resources:
                 S3Key: !Ref CustomResourceCodeObject
             Handler: codebuild-start.handler
             Role: !GetAtt CodeBuildStarterLambdaRole.Arn
-            Runtime: python3.7
+            Runtime: python3.8
             Timeout: 120
             TracingConfig:
                 Mode: Active
@@ -774,6 +1092,23 @@ Resources:
                             Resource:
                                 - !Sub "arn:aws:s3:::${WebAppBucket}"
                                 - !Sub "arn:aws:s3:::${WebAppBucket}/*"
+                - PolicyName: PollySynthesizeSpeech
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - polly:SynthesizeSpeech
+                            Resource: "*"
+                - PolicyName: TranslateText
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - translate:TranslateText
+                                - comprehend:DetectDominantLanguage
+                            Resource: "*"
                 - PolicyName: CloudWatchLogsCodeBuild
                   PolicyDocument:
                       Version: 2012-10-17
@@ -860,7 +1195,7 @@ Resources:
                 S3Key: !Ref CustomResourceCodeObject
             Handler: s3-cleanup.handler
             Role: !GetAtt S3CleanupLambdaRole.Arn
-            Runtime: python3.7
+            Runtime: python3.8
             Timeout: 120
             TracingConfig:
                 Mode: Active
@@ -960,3 +1295,13 @@ Outputs:
         Value: !Sub "${RestApi.Outputs.RestApiId}"
         Description: Rest API ID if required by other elements
         Condition: EnableLiveChat
+    
+    WebSocketId:
+        Value: !Sub "${StreamingSupport.Outputs.WebSocketId}"
+        Description: Websocket API ID
+        Condition: EnableStreaming
+
+    WebSocketId:
+        Value: !Sub "${StreamingSupport.Outputs.DynamoTableName}"
+        Description: DynamoDB table name
+        Condition: EnableStreaming

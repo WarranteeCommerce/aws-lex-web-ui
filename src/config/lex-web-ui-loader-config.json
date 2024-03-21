@@ -5,13 +5,13 @@
   },
   "lex": {
     "initialText": "",
-    "botName": "AnyCover",
+    "botName": "Anycover",
     "v2BotId": "JDKCHTSYNR",
     "v2BotAliasId": "TSTALIASID"
   },
   "ui": {
     "parentOrigin": "http://localhost:8000",
-    "toolbarTitle": "Any Cover",
+    "toolbarTitle": "Anycover",
     "toolbarLogo": "",
     "positiveFeedbackIntent": "Thumbs up",
     "negativeFeedbackIntent": "Thumbs down",
@@ -43,7 +43,8 @@
     "agentJoinedMessage": "",
     "agentLeftMessage": "",
     "chatEndedMessage": "",
-    "attachChatTranscript": ""
+    "attachChatTranscript": "",
+    "transcriptMessageDelayInMsec": ""
   }
 }
 
